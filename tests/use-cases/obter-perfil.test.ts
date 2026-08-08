@@ -15,15 +15,15 @@ jest.mock('../../src/commom', () => ({
   verifyToken: jest.fn(),
 }));
 
-jest.mock('../../src/cognito-proxy', () => ({
+jest.mock('../../src/proxies/cognito-proxy', () => ({
   adminGetUserAttributes: jest.fn(),
   getUserAttributes: jest.fn(),
 }));
 
 import { APIGatewayProxyEvent } from 'aws-lambda';
-import { ObterPerfilUseCase } from '../../src/casos/obter-perfil';
+import { ObterPerfilUseCase } from '../../src/use-cases';
 import * as commom from '../../src/commom';
-import * as cognitoProxy from '../../src/cognito-proxy';
+import * as cognitoProxy from '../../src/proxies/cognito-proxy';
 
 const mockExtractToken = commom.extractToken as jest.MockedFunction<typeof commom.extractToken>;
 const mockVerifyToken = commom.verifyToken as jest.MockedFunction<typeof commom.verifyToken>;
