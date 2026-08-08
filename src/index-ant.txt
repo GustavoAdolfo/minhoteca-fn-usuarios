@@ -1,0 +1,114 @@
+import { createLogger, format, transports } from 'winston';
+
+import { APIGatewayEvent, APIGatewayProxyEventHeaders } from 'aws-lambda';
+import { createPreSignedUrlGet, createPreSignedUrlPut, getDataFromS3File } from './s3-proxy';
+
+const response = {
+  isBase64Encoded: false,
+  headers: {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Headers':
+      'Content-Type,Authorization,X-Amz-Date,X-Amz-Security-Token,X-Api-Key,X-API-ACCESS',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET,OPTIONS,POST,PUT,HEAD,PATCH,DELETE',
+  },
+  statusCode: 200,
+  body: '',
+};
+
+async function getUseTermsDocument() {
+  const bucketName = process.env.S3_BUCKET_DOCUMENTS ?? '';
+  const objectName = process.env.USE_TERMS_DOCUMENT_PATH ?? '';
+
+  const document = await getDataFromS3File(bucketName, objectName);
+  return document;
+}
+
+export const handler = async (event: APIGatewayEvent) => {
+  /* istanbul ignore next */
+  loggerInspect('Evento recebido', {
+    environment: process.env.ENVIRONMENT,
+    event,
+  });
+
+  try {
+    if (event.path === '/v1/use-terms') {
+      loggerInspect('Buscando arquivo dos termos de uso');
+      const useTerms = await getUseTermsDocument();
+      loggerInspect('result getUseTermsDocument', { useTerms });
+      if (useTerms) {
+        response.statusCode = 200;
+        response.body = JSON.stringify(useTerms);
+        return response;
+      } else {
+        response.statusCode = 404;
+        return response;
+      }
+    }
+
+    const token = extractToken(event.headers);
+    const payload = await verifyToken(token);
+    if (!payload) {
+      response.statusCode = 403;
+      response.body = 'Usuário não autorizado';
+      return response;
+    }
+
+    if (event.path === '/v1/profile') {
+      const userAttributes = await getUserAttributes(payload);
+      if (!userAttributes) {
+        response.statusCode = 404;
+        response.body = 'Usuário não identificado';
+      } else {
+        response.body = JSON.stringify(userAttributes);
+        response.statusCode = 200;
+      }
+      return response;
+    }
+
+    if (event.path === '/v1/profile/picture') {
+      const picturePath = process.env.PROFILE_PICTURE_PATH ?? '';
+      const contentType: string = event.queryStringParameters?.contentType ?? '';
+      const extension = event.queryStringParameters?.fileType ?? '';
+      const objectName = `${picturePath}/${payload?.sub}.${extension}`;
+      const bucketName = process.env.S3_BUCKET_RESOURCES ?? '';
+
+      loggerInspect('File kind', { contentType, extension, objectName });
+      if (!contentType) {
+        response.statusCode = 401;
+        response.body =
+          'Parâmetro necessário não identificado para geração de URL para a operação GET';
+        return response;
+      }
+
+      if (event.httpMethod.toUpperCase() === 'GET') {
+        loggerInspect('Obter url pre-assinada para DOWNLOAD no S3', {
+          objectName,
+          contentType,
+        });
+        const resultUrl = await createPreSignedUrlGet(bucketName, objectName, contentType);
+        loggerInspect('URL gerada', { resultUrl });
+        response.statusCode = 200;
+        response.body = resultUrl;
+        return response;
+      }
+
+      if (event.httpMethod.toUpperCase() === 'POST') {
+        loggerInspect('Usar url pre-assinada para UPLOAD no S3');
+        const resultUrl = await createPreSignedUrlPut(bucketName, objectName, contentType);
+        loggerInspect('URL Gerada', { resultUrl });
+        response.statusCode = 201;
+        response.body = resultUrl;
+        console.log('response', { response });
+        return response;
+      }
+    }
+
+    response.statusCode = 400;
+    response.body = 'Operação não identificada';
+    return response;
+  } catch (error) {
+    logger.error('Erro geral', { error });
+    return response;
+  }
+};

@@ -1,0 +1,111 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      packages: read # Alterado para 'read' pois só precisamos ler pacotes, não mais escrever/publicar.
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_PAT }}
+
+      - name: Setup Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Use Node.js 24.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+          cache: 'npm'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@gustavoadolfo'
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Check and Bump Version
+        id: version
+        run: |
+          # Obtém a versão do package.json antes do merge e a versão atual
+          PREV_VERSION=$(git show HEAD~1:package.json | jq -r .version)
+          CURR_VERSION=$(jq -r .version package.json)
+
+          if [ "$PREV_VERSION" != "$CURR_VERSION" ]; then
+            echo "Versão alterada manualmente no PR (de $PREV_VERSION para $CURR_VERSION). Pulando bump automático de patch."
+            # Cria a tag anotada localmente para a versão manual (o '|| true' previne erro se a tag já existir)
+            git tag -a "v$CURR_VERSION" -m "chore(release): $CURR_VERSION [skip ci]" || true
+            echo "tag_name=v$CURR_VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "Nenhuma alteração de versão detectada. Realizando bump de patch automático..."
+            
+            while true; do
+              # Faz o bump apenas nos arquivos, sem commitar nem criar tag ainda
+              NEW_VERSION=$(npm version patch --no-git-tag-version)
+              
+              if git show-ref --tags --verify --quiet "refs/tags/$NEW_VERSION"; then
+                echo "⚠️ A tag $NEW_VERSION já existe (provavelmente de uma falha anterior). Incrementando novamente..."
+              else
+                echo "✅ Versão $NEW_VERSION disponível. Criando commit e tag..."
+                git commit -am "chore(release): ${NEW_VERSION#v} [skip ci]"
+                git tag -a "$NEW_VERSION" -m "chore(release): ${NEW_VERSION#v} [skip ci]"
+                echo "tag_name=$NEW_VERSION" >> $GITHUB_OUTPUT
+                break
+              fi
+            done
+          fi
+
+      - name: Push version bump
+        run: |
+          git push origin main
+          git push origin ${{ steps.version.outputs.tag_name }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag_name }}
+          name: Release ${{ steps.version.outputs.tag_name }}
+          generate_release_notes: true
+          body: |
+            Changes in this Release
+            - See CHANGELOG.md for detailed information
+
+      - name: Sync develop with main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_EXISTS=$(gh pr list --base develop --head main --state open --json number -q 'length')
+
+          if [ "$PR_EXISTS" -eq "0" ]; then
+            gh pr create --base develop --head main --title "🔄 chore: Sincronizar \`develop\` com \`main\` após release" --body "Sincronização automática pós-release para garantir que a \`develop\` esteja atualizada com a versão (e possível changelog) recém-publicada na \`main\`."
+          else
+            echo "Já existe um PR aberto para sincronizar a main com a develop."
+          fi

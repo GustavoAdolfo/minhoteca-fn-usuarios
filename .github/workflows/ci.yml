@@ -1,0 +1,172 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: read
+
+    strategy:
+      matrix:
+        node-version: [24.x]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@gustavoadolfo'
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test -- --coverage
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/coverage-final.json
+          flags: unittests
+          name: codecov-umbrella
+
+  create-pr-to-main:
+    name: 'Create PR to Main'
+    needs: build-and-test # Garante que o PR só será aberto se o build e os testes passarem
+    runs-on: ubuntu-latest
+    # Executa este job SOMENTE quando houver um push/merge na branch develop
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+
+    permissions:
+      pull-requests: write # Permissão necessária para o bot do GitHub abrir o PR
+      contents: read
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Necessário para obter o histórico da branch main
+
+      - name: Create Pull Request via GitHub CLI
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch origin main
+          MAIN_VERSION=$(git show origin/main:package.json | jq -r .version)
+          DEV_VERSION=$(jq -r .version package.json)
+
+          echo "Versão na main: $MAIN_VERSION"
+          echo "Versão na develop: $DEV_VERSION"
+
+          if [ -z "$MAIN_VERSION" ]; then
+            echo "Ainda não há conteúdo na branch main. Verifique se a branch main existe e contém um package.json válido."
+            exit 0
+          fi
+
+          # sort -V ordena as versões. Se MAIN_VERSION for a menor (ou igual), então DEV_VERSION >= MAIN_VERSION
+          if [ "$(printf '%s\n' "$MAIN_VERSION" "$DEV_VERSION" | sort -V | head -n1)" = "$MAIN_VERSION" ]; then
+            # Verifica se existem modificações reais na develop em relação ao que já está na main
+            CHANGED_FILES=$(git diff origin/main...HEAD --name-only)
+            
+            if [ -z "$CHANGED_FILES" ]; then
+              echo "A branch develop está perfeitamente sincronizada com a main. Não há novas modificações. O PR automático não será criado para evitar loop."
+            else
+              PR_EXISTS=$(gh pr list --base main --head develop --state open --json number -q 'length')
+
+              if [ "$PR_EXISTS" -eq "0" ]; then
+                gh pr create --base main --head develop --title "🚀 Release: Atualização da \`main\` a partir da \`develop\`" --body "Este Pull Request foi aberto automaticamente após os testes passarem com sucesso na branch \`develop\`.\n\n**Versão detectada em develop:** \`$DEV_VERSION\`\n**Versão atual em main:** \`$MAIN_VERSION\`\n\nRevise as alterações e aprove para promover para produção."
+              else
+                echo "Já existe um Pull Request aberto de develop para main. Nenhuma ação adicional necessária."
+              fi
+            fi
+          else
+            echo "A versão na develop ($DEV_VERSION) é menor que a versão na main ($MAIN_VERSION). Não será aberto um Pull Request automático."
+          fi
+
+  terraform:
+    name: 'Terraform Deploy'
+    needs: build-and-test # Garante que o deploy só rode se os testes passarem
+    runs-on: ubuntu-latest
+    # Executa este job SOMENTE quando houver um push na branch main
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: prod
+
+    permissions:
+      id-token: write # Necessário para interagir com o OIDC da AWS
+      contents: read
+
+    defaults:
+      run:
+        # Define o diretório onde os comandos do Terraform serão executados
+        working-directory: terraform/envs/prod
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js (Necessário para o local-exec do Terraform que roda scripts Node.js)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+          cache: 'npm'
+
+      - name: Configurar Credenciais da AWS via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GitHubActionMinhoteca
+          aws-region: us-east-1
+          role-session-name: GitHubActionsTerraformDeploy
+          disable-retry: true
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init -backend-config=default.conf
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build package
+        run: npm run build
+
+      - name: Terraform Plan
+        env:
+          TF_VAR_appregistry_id: ${{ vars.TF_appregistry_id }}
+          TF_VAR_environment: ${{ vars.TF_environment }}
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        env:
+          TF_VAR_appregistry_id: ${{ vars.TF_appregistry_id }}
+          TF_VAR_environment: ${{ vars.TF_environment }}
+        # O auto-approve é essencial em ambientes de CI/CD pois não há interação humana
+        run: terraform apply -auto-approve tfplan
