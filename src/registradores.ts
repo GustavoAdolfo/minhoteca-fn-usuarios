@@ -1,6 +1,6 @@
 // import { DynamoDBRepository, MongoDBRepository } from '@gustavoadolfo/minhoteca-adapter-layer';
 
-import { ObterPerfilUseCase } from './casos/obter-perfil';
+import { ObterPerfilUseCase } from './use-cases/obter-perfil';
 
 // const repository =
 //   process.env.DYNAMODB_REPOSITORY && process.env.DYNAMODB_REPOSITORY === 'true'
