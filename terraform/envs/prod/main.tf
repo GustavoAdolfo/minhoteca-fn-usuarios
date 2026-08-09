@@ -42,21 +42,21 @@ module "database" {
   livro_emprestimos_range_type     = "S"
 }
 
-# module "lambda" {
-#   source                             = "../../modules/lambda"
-#   account_id                         = local.account_id
-#   region_name                        = local.region
-#   application_tags                   = data.aws_servicecatalogappregistry_application.minhoteca_application.application_tag
-#   adapterLayer_arn                   = local.adapterLayer_arn
-#   coreLayer_arn                      = local.coreLayer_arn
-#   environment                        = var.environment
-#   userpool_arn                       = data.aws_cognito_user_pool.minhoteca_user_pool.arn
-#   dynamodb_repository                = true
-#   ddb_usuario_emprestimos_name       = module.database.ddb_usuario_emprestimos_name
-#   ddb_livro_emprestimos_name         = module.database.ddb_livro_emprestimos_name
-#   ddb_usuario_emprestimos_hash_name  = module.database.usuario_emprestimos_hash_name
-#   ddb_usuario_emprestimos_range_name = module.database.usuario_emprestimos_range_name
-#   ddb_livro_emprestimos_hash_name    = module.database.livro_emprestimos_hash_name
-#   ddb_livro_emprestimos_range_name   = module.database.livro_emprestimos_range_name
-#   debug                              = true
-# }
+module "lambda" {
+  source                             = "../../modules/lambda"
+  account_id                         = local.account_id
+  region_name                        = local.region
+  application_tags                   = data.aws_servicecatalogappregistry_application.minhoteca_application.application_tag
+  adapterLayer_arn                   = local.adapterLayer_arn
+  coreLayer_arn                      = local.coreLayer_arn
+  environment                        = var.environment
+  userpool_arn                       = data.aws_cognito_user_pool.minhoteca_user_pool.arn
+  dynamodb_repository                = true
+  ddb_usuario_emprestimos_name       = module.database.ddb_usuario_emprestimos_name
+  ddb_livro_emprestimos_name         = module.database.ddb_livro_emprestimos_name
+  ddb_usuario_emprestimos_hash_name  = module.database.ddb_usuario_emprestimos_hash_name
+  ddb_usuario_emprestimos_range_name = module.database.ddb_usuario_emprestimos_range_name
+  ddb_livro_emprestimos_hash_name    = module.database.ddb_livro_emprestimos_hash_name
+  ddb_livro_emprestimos_range_name   = module.database.ddb_livro_emprestimos_range_name
+  debug                              = true
+}
