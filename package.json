@@ -1,6 +1,6 @@
 {
   "name": "minhoteca-fn-usuarios",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Função de gerenciamento de usuários da Minhoteca",
   "main": "index.js",
   "scripts": {
