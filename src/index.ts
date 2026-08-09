@@ -4,7 +4,7 @@ import { UseCaseInterface, LogService, PageDataType } from '@gustavoadolfo/minho
 import { registradores } from './registradores';
 
 // const cacheRepository = new DynamoDBRepository();
-const logService = new LogService('BibliotecaHandler');
+const logService = new LogService('UsuarioHandler');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
