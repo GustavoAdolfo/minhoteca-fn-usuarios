@@ -36,7 +36,7 @@
   "devDependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.1106.0",
     "@aws-sdk/client-config-service": "^3.1101.0",
-    "@aws-sdk/client-dynamodb": "^3.1101.0",
+    "@aws-sdk/client-dynamodb": "^3.1104.0",
     "@aws-sdk/client-s3": "^3.1104.0",
     "@aws-sdk/lib-dynamodb": "^3.1101.0",
     "@aws-sdk/node-http-handler": "^3.374.0",
