@@ -1,11 +1,11 @@
-output "lambda_acervoes_arn" {
-  value = aws_lambda_function.acervoFunction.arn
+output "lambda_usuarios_arn" {
+  value = aws_lambda_function.usuarioFunction.arn
 }
 
-output "lambda_acervoes_invoke_arn" {
-  value = aws_lambda_function.acervoFunction.invoke_arn
+output "lambda_usuarios_invoke_arn" {
+  value = aws_lambda_function.usuarioFunction.invoke_arn
 }
 
-output "lambda_acervoes_name" {
-  value = aws_lambda_function.acervoFunction.function_name
+output "lambda_usuarios_name" {
+  value = aws_lambda_function.usuarioFunction.function_name
 }
