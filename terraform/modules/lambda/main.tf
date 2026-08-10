@@ -52,10 +52,15 @@ data "external" "usuarioFunction_version" {
 
 resource "null_resource" "usuarioFunction_build" {
   triggers = {
-    src_hash = sha256(join("", [for f in sort(fileset("${path.module}/../../src", "**/*")) : filesha256("${path.module}/../../minhoteca-functions/usuarios-function/${f}")]))
+    src_hash = sha256(join("", [for f in sort(fileset("${path.module}/../../../src", "**/*")) : filesha256("${path.module}/../../../src/${f}")]))
+    deps_hash = sha256(join("", [
+      filesha256("${path.module}/../../../package.json"),
+      filesha256("${path.module}/../../../package-lock.json"),
+      filesha256("${path.module}/../../../tsconfig.json"),
+    ]))
   }
   provisioner "local-exec" {
-    command = "cd ${path.module}/../../.. && rm -rf lambda-package && npm ci --ignore-scripts && npm run build && mkdir -p lambda-package && cp -R dist/. lambda-package/ && cp package.json package-lock.json lambda-package/ && cd lambda-package && npm ci --omit=dev --ignore-scripts"
+    command = "cd ${path.module}/../../.. && rm -rf lambda-package && npm ci --ignore-scripts && mkdir -p lambda-package && npx esbuild src/index.ts --bundle --platform=node --target=node22 --format=cjs --outfile=lambda-package/index.js ${var.lambda_bundle_minify ? "--minify" : ""} ${var.lambda_bundle_sourcemap ? "--sourcemap" : ""} --external:@gustavoadolfo/minhoteca-core-layer --external:@gustavoadolfo/minhoteca-adapter-layer"
   }
 }
 
