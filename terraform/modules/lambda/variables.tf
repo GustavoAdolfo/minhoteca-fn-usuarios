@@ -98,3 +98,7 @@ variable "environment" {
 variable "userpool_arn" {
   type = string
 }
+
+variable "userpool_id" {
+  type = string
+}

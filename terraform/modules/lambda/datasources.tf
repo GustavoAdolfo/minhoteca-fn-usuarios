@@ -26,11 +26,13 @@ data "aws_iam_policy_document" "lambda_dynamodb" {
       "dynamodb:PutItem",
       "dynamodb:GetItem",
       "dynamodb:UpdateItem",
+      "dynamodb:DeleteItem",
       "dynamodb:Query",
-      "dynamodb:GetRecords"
+      "dynamodb:Scan"
     ]
     resources = [
       "arn:aws:dynamodb:${var.region_name}:${var.account_id}:table/${var.ddb_usuario_emprestimos_name}",
+      "arn:aws:dynamodb:${var.region_name}:${var.account_id}:table/${var.ddb_livro_emprestimos_name}",
     ]
   }
 }
@@ -68,12 +70,17 @@ data "aws_iam_policy_document" "lambda_cognito" {
       "cognito-idp:AdminResetUserPassword",
       "cognito-idp:AdminSetUserPassword",
       "cognito-idp:GetUser",
-      "cognito-idp:ListUserPools",
       "cognito-idp:AdminInitiateAuth",
       "cognito-idp:AdminUpdateUserAttributes",
       "cognito-idp:AdminRespondToAuthChallenge",
       "cognito-idp:AdminUserGlobalSignOut",
     ]
     resources = [var.userpool_arn]
+  }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["cognito-idp:ListUserPools"]
+    resources = ["*"]
   }
 }
