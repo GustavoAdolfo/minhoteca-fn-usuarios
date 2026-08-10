@@ -55,14 +55,14 @@ resource "null_resource" "usuarioFunction_build" {
     src_hash = sha256(join("", [for f in sort(fileset("${path.module}/../../src", "**/*")) : filesha256("${path.module}/../../minhoteca-functions/usuarios-function/${f}")]))
   }
   provisioner "local-exec" {
-    command = "cd ${path.module}/../../.. && npm install && npm run build"
+    command = "cd ${path.module}/../../.. && rm -rf lambda-package && npm ci --ignore-scripts && npm run build && mkdir -p lambda-package && cp -R dist/. lambda-package/ && cp package.json package-lock.json lambda-package/ && cd lambda-package && npm ci --omit=dev --ignore-scripts"
   }
 }
 
 data "archive_file" "usuarioFunction_file" {
   depends_on  = [null_resource.usuarioFunction_build]
   type        = "zip"
-  source_dir  = "${path.module}/../../../dist/"
+  source_dir  = "${path.module}/../../../lambda-package/"
   output_path = "${path.module}/usuariosFunction.zip"
 }
 
