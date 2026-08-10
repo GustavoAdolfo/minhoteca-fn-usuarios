@@ -76,6 +76,16 @@ variable "debug" {
   default = true
 }
 
+variable "lambda_bundle_minify" {
+  type    = bool
+  default = true
+}
+
+variable "lambda_bundle_sourcemap" {
+  type    = bool
+  default = false
+}
+
 variable "application_tags" {
   type        = map(string)
   default     = {}
