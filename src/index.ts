@@ -1,9 +1,7 @@
 import { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { UseCaseInterface, LogService, PageDataType } from '@gustavoadolfo/minhoteca-core-layer';
-// import { DynamoDBRepository, ResultType } from '@gustavoadolfo/minhoteca-adapter-layer';
 import { registradores } from './registradores';
 
-// const cacheRepository = new DynamoDBRepository();
 const logService = new LogService('UsuarioHandler');
 
 const corsHeaders = {
@@ -19,33 +17,6 @@ export const handler = async (
 ): Promise<APIGatewayProxyResult> => {
   const logId = event.requestContext.requestId;
   logService.info('Evento recebido:', { logId }, { event, context });
-
-  // const tabelaCache = process.env.TB_CACHE ?? '';
-
-  // let cacheKey =
-  //   event.path + (event.queryStringParameters ? JSON.stringify(event.queryStringParameters) : '');
-  // cacheKey = cacheKey.replace(/\s/g, '').replace(/[^a-zA-Z0-9:]/g, '_');
-  // cacheKey = event.httpMethod.toLowerCase() + '-' + cacheKey;
-
-  // let data: ResultType = {} as unknown as ResultType;
-  // try {
-  //   data = await cacheRepository.getData(tabelaCache, {
-  //     name: 'PageId',
-  //     type: 'S',
-  //     value: cacheKey,
-  //   });
-  // } catch (error: unknown) {
-  //   logService.error('Erro ao buscar dados no cache:', { logId }, error as Error);
-  // }
-
-  // if (data?.data?.length > 0 && data?.data[0]?.content) {
-  //   logService.info('Retornando dados a partir do cache.', { logId }, { cacheKey });
-  //   return {
-  //     statusCode: 200,
-  //     headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Cache': 'HIT' },
-  //     body: data.data[0].content,
-  //   };
-  // }
 
   const eventMethods = event.httpMethod.toLowerCase() as keyof typeof registradores;
   const registradoresDoMetodo = registradores[eventMethods];
@@ -122,16 +93,6 @@ export const handler = async (
 
         const sizeInKB = Buffer.byteLength(JSON.stringify(result), 'utf8') / 1024;
         logService.info('Response size in KB:', { logId }, { sizeInKB });
-
-        // try {
-        //   await cacheRepository.saveData(tabelaCache, {
-        //     PageId: cacheKey,
-        //     content: JSON.stringify(result),
-        //     Expiration: Math.floor(Date.now() / 1000) + 3600 * 12, // Expira em 12 hora
-        //   });
-        // } catch (error) {
-        //   logService.error('Error saving data to cache:', { logId }, error as Error);
-        // }
 
         logService.info(
           'Retornando resposta bem-sucedida com dados.',
