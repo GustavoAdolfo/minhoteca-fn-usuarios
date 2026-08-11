@@ -163,6 +163,7 @@ jobs:
           TF_VAR_appregistry_id: ${{ vars.TF_appregistry_id }}
           TF_VAR_environment: ${{ vars.TF_environment }}
           TF_VAR_userpool_id: ${{ vars.TF_userpool_id }}
+          TF_VAR_userpool_client_id: ${{ vars.TF_userpool_client_id }}
         run: terraform plan -out=tfplan -input=false
 
       - name: Terraform Apply
@@ -170,5 +171,6 @@ jobs:
           TF_VAR_appregistry_id: ${{ vars.TF_appregistry_id }}
           TF_VAR_environment: ${{ vars.TF_environment }}
           TF_VAR_userpool_id: ${{ vars.TF_userpool_id }}
+          TF_VAR_userpool_client_id: ${{ vars.TF_userpool_client_id }}
         # O auto-approve é essencial em ambientes de CI/CD pois não há interação humana
         run: terraform apply -auto-approve -input=false tfplan
