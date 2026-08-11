@@ -15,7 +15,7 @@ jest.mock('../../src/commom', () => ({
   verifyToken: jest.fn(),
 }));
 
-jest.mock('../../src/proxies/cognito-proxy', () => ({
+jest.mock('../../src/cognito-proxy', () => ({
   adminGetUserAttributes: jest.fn(),
   getUserAttributes: jest.fn(),
 }));
@@ -23,15 +23,12 @@ jest.mock('../../src/proxies/cognito-proxy', () => ({
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import { ObterPerfilUseCase } from '../../src/use-cases';
 import * as commom from '../../src/commom';
-import * as cognitoProxy from '../../src/proxies/cognito-proxy';
+import * as cognitoProxy from '../../src/cognito-proxy';
 
 const mockExtractToken = commom.extractToken as jest.MockedFunction<typeof commom.extractToken>;
 const mockVerifyToken = commom.verifyToken as jest.MockedFunction<typeof commom.verifyToken>;
 const mockAdminGetUserAttributes = cognitoProxy.adminGetUserAttributes as jest.MockedFunction<
   (...args: Parameters<typeof cognitoProxy.adminGetUserAttributes>) => Promise<unknown>
->;
-const mockGetUserAttributes = cognitoProxy.getUserAttributes as jest.MockedFunction<
-  (...args: Parameters<typeof cognitoProxy.getUserAttributes>) => Promise<unknown>
 >;
 
 const originalAwsRegion = process.env.AWS_REGION;
@@ -86,7 +83,7 @@ describe('ObterPerfilUseCase', () => {
       const result = await useCase.execute(createEvent({ 'X-API-ACCESS': 'Bearer access-token' }));
 
       expect(mockVerifyToken).toHaveBeenCalledWith('access-token');
-      expect(mockGetUserAttributes).not.toHaveBeenCalled();
+      expect(mockAdminGetUserAttributes).not.toHaveBeenCalled();
       expect(result).toEqual({
         Items: 0,
         TotalItems: 0,
@@ -101,11 +98,11 @@ describe('ObterPerfilUseCase', () => {
       const useCase = new ObterPerfilUseCase();
       mockExtractToken.mockReturnValue('access-token');
       mockVerifyToken.mockResolvedValue({ sub: 'sub-123' });
-      mockGetUserAttributes.mockResolvedValue(null);
+      mockAdminGetUserAttributes.mockResolvedValue(null);
 
       const result = await useCase.execute(createEvent({ 'X-API-ACCESS': 'Bearer access-token' }));
 
-      expect(mockGetUserAttributes).toHaveBeenCalledWith('sub-123', 'us-east-1');
+      expect(mockAdminGetUserAttributes).toHaveBeenCalledWith('sub-123', 'us-east-1');
       expect(result).toEqual({
         Items: 0,
         TotalItems: 0,
@@ -126,7 +123,7 @@ describe('ObterPerfilUseCase', () => {
 
       mockExtractToken.mockReturnValue('access-token');
       mockVerifyToken.mockResolvedValue({ sub: 'sub-123' });
-      mockGetUserAttributes.mockResolvedValue(pageData);
+      mockAdminGetUserAttributes.mockResolvedValue(pageData);
 
       const result = await useCase.execute(createEvent({ 'x-api-access': 'Bearer access-token' }));
 

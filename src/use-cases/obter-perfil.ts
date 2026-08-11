@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import { LogService, UseCaseInterface, PageDataType } from '@gustavoadolfo/minhoteca-core-layer';
-import { adminGetUserAttributes, getUserAttributes } from '../cognito-proxy';
+import { adminGetUserAttributes } from '../cognito-proxy';
 import { extractToken, verifyToken } from '../commom';
 
 export class ObterPerfilUseCase implements UseCaseInterface {
@@ -39,10 +39,11 @@ export class ObterPerfilUseCase implements UseCaseInterface {
 
   async execute(event: APIGatewayProxyEvent): Promise<PageDataType> {
     let payload: Record<string, any> | null = null;
+    let token: string | undefined = undefined;
     const logId = event.requestContext.requestId;
 
     try {
-      const token = extractToken(event.headers);
+      token = extractToken(event.headers);
       if (!token) {
         this.logger.error(
           'Parâmetro identificador não informado',
@@ -77,7 +78,10 @@ export class ObterPerfilUseCase implements UseCaseInterface {
         return result;
       }
 
-      const userAttributes = await getUserAttributes(payload.sub, process.env.AWS_REGION ?? '');
+      const userAttributes = await adminGetUserAttributes(
+        payload.sub,
+        process.env.AWS_REGION ?? ''
+      );
       if (!userAttributes) {
         return {
           Items: 0,
@@ -103,6 +107,7 @@ export class ObterPerfilUseCase implements UseCaseInterface {
         {
           logId,
           payload,
+          token,
           label: 'ObterPerfilUseCase',
         },
         error as Error
