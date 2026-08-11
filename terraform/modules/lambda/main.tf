@@ -30,6 +30,7 @@ resource "aws_lambda_function" "usuarioFunction" {
       TB_LIVRO_EMPRESTIMOS_RANGE_NAME   = var.ddb_livro_emprestimos_range_name
       USER_POOL_ARN                     = var.userpool_arn
       USER_POOL_ID                      = var.userpool_id
+      CLIENT_ID_TOKEN                   = var.userpool_client_id
       DEBUG                             = var.debug
       ENVIRONMENT                       = var.environment
     }
