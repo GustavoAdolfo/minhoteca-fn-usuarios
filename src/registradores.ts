@@ -1,6 +1,6 @@
 // import { DynamoDBRepository, MongoDBRepository } from '@gustavoadolfo/minhoteca-adapter-layer';
 
-import { ObterPerfilUseCase } from './use-cases/obter-perfil';
+import { ObterPerfilUseCase, SalvarPerfilUseCase } from './use-cases';
 
 // const repository =
 //   process.env.DYNAMODB_REPOSITORY && process.env.DYNAMODB_REPOSITORY === 'true'
@@ -15,10 +15,8 @@ export const registradores = {
     // { '^\/v1\/autores$': new ListarAutorUseCase(repository) },
     // { '^\/v1\/autor\/[A-Fa-f0-9\-]+$': new ObterAutorUseCase(repository) },
   ],
-  post: [
-    // { '^\/v1\/perfil$': new SalvarPerfilUseCase() },
-    // { '^\/v1\/perfil/foto$': new SalvarFotoPerfilUseCase() },
-  ],
-  // put: [{ '^\/v1\/perfil$': new AtualizarPerfilUseCase() }],
+  // post: [{ '^\/v1\/perfil$': new SalvarPerfilUseCase() }],
+  // { '^\/v1\/perfil/foto$': new SalvarFotoPerfilUseCase() },
+  put: [{ '^\/v1\/perfil$': new SalvarPerfilUseCase() }],
   // delete: [{ '^\/v1\/perfil$': new ExcluirPerfilUseCase() }],
 };
