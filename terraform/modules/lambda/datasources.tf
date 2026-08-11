@@ -74,6 +74,8 @@ data "aws_iam_policy_document" "lambda_cognito" {
       "cognito-idp:AdminUpdateUserAttributes",
       "cognito-idp:AdminRespondToAuthChallenge",
       "cognito-idp:AdminUserGlobalSignOut",
+      "cognito-idp:AdminDeleteUser",
+      "cognito-idp:AdminUpdateUserAttributes",
     ]
     resources = [var.userpool_arn]
   }
