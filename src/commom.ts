@@ -42,14 +42,10 @@ export const optionsConfiguration = (
 
 export function extractToken(headers: APIGatewayProxyEventHeaders): string | undefined {
   let token = headers?.['X-API-ACCESS'] ?? headers?.['x-api-access'];
-  // eslint-disable-next-line no-console
-  console.log('**** TOKEN 1 ****', { token });
   if (!token) {
     return undefined;
   }
   token = token.startsWith('Bearer') ? token.replace('Bearer', '').trim() : token.trim();
-  // eslint-disable-next-line no-console
-  console.log('**** TOKEN 2 ****', { token });
   return token;
 }
 

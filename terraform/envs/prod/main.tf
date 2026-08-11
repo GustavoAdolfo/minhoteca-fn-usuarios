@@ -52,6 +52,7 @@ module "lambda" {
   environment                        = var.environment
   userpool_arn                       = data.aws_cognito_user_pool.minhoteca_user_pool.arn
   userpool_id                        = data.aws_cognito_user_pool.minhoteca_user_pool.id
+  userpool_client_id                 = var.userpool_client_id
   dynamodb_repository                = true
   ddb_usuario_emprestimos_name       = module.database.ddb_usuario_emprestimos_name
   ddb_livro_emprestimos_name         = module.database.ddb_livro_emprestimos_name

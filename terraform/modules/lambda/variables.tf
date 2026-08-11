@@ -112,3 +112,7 @@ variable "userpool_arn" {
 variable "userpool_id" {
   type = string
 }
+
+variable "userpool_client_id" {
+  type = string
+}
