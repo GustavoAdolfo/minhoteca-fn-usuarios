@@ -10,30 +10,10 @@ import {
   CognitoIdentityProviderClient,
   AdminGetUserCommandOutput,
   GetUserCommandOutput,
+  AdminUpdateUserAttributesCommandOutput,
 } from '@aws-sdk/client-cognito-identity-provider';
 import { ConfigServiceClient } from '@aws-sdk/client-config-service';
 import { optionsConfiguration, reviewOptions } from '../commom';
-import { createLogger, format, transports } from 'winston';
-
-const { timestamp, label, combine } = format;
-const formatoLog = combine(
-  label({ label: 'minhoteca-dynamodb-proxy' }),
-  timestamp(),
-  format.splat(),
-  format.json()
-);
-const logger = createLogger({
-  level: 'info',
-  format: formatoLog,
-  transports: [new transports.Console()],
-});
-
-const loggerInspect = (message: string, info?: object) => {
-  /* istanbul ignore next */
-  if (process.env['ENVIRONMENT']?.toLowerCase() === 'debug') {
-    info ? logger.info(message, info) : logger.info(message);
-  }
-};
 
 const createCognitoClient = (options: ConfigServiceClient): CognitoIdentityProviderClient => {
   const config = reviewOptions(options);
@@ -77,7 +57,7 @@ export const adminUpdateUserAttributes = async (
   region: string,
   attributes: AttributeType[],
   endpoint?: string
-) => {
+): Promise<AdminUpdateUserAttributesCommandOutput> => {
   const config = optionsConfiguration(region, endpoint);
   const client = createCognitoClient(config);
   const input: AdminUpdateUserAttributesCommandInput = {
@@ -105,6 +85,5 @@ export const listUsers = async (region: string, endpoint?: string): Promise<User
   };
   const command = new ListUsersCommand(input);
   const response: ListUsersResponse = await client.send(command);
-  loggerInspect('listUsers', { response });
   return response.Users ?? ([] as UserType[]);
 };
