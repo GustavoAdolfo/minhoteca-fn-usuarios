@@ -17,3 +17,11 @@ variable "userpool_client_id" {
   type        = string
   description = "ID do Client do User Pool do Cognito"
 }
+
+variable "s3_bucket_recursos" {
+  type = string
+}
+
+variable "s3_caminho_fotos_perfil" {
+  type = string
+}
