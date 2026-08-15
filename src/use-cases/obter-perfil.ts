@@ -1,13 +1,41 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import { LogService, UseCaseInterface, PageDataType } from '@gustavoadolfo/minhoteca-core-layer';
-import { adminGetUserAttributes } from '../cognito-proxy';
+import { adminGetUserAttributes, getUserAttributes } from '../cognito-proxy';
 import { extractToken, verifyToken } from '../commom';
+
+const PROFILE_CACHE_TTL_MS = 5 * 60 * 1000;
 
 export class ObterPerfilUseCase implements UseCaseInterface {
   private logger: LogService;
+  private readonly profileCache = new Map<
+    string,
+    { expiresAt: number; data: Record<string, any> }
+  >();
+
   constructor() {
     this.logger = new LogService('minhoteca-user-service');
+  }
+
+  private getCachedProfile(sub: string): Record<string, any> | null {
+    const cachedProfile = this.profileCache.get(sub);
+    if (!cachedProfile) {
+      return null;
+    }
+
+    if (Date.now() > cachedProfile.expiresAt) {
+      this.profileCache.delete(sub);
+      return null;
+    }
+
+    return cachedProfile.data;
+  }
+
+  private cacheProfile(sub: string, data: Record<string, any>): void {
+    this.profileCache.set(sub, {
+      expiresAt: Date.now() + PROFILE_CACHE_TTL_MS,
+      data,
+    });
   }
 
   async getUserAttributes(payload: { sub?: string }): Promise<{ [key: string]: any } | null> {
@@ -78,10 +106,19 @@ export class ObterPerfilUseCase implements UseCaseInterface {
         return result;
       }
 
-      const userAttributes = await adminGetUserAttributes(
-        payload.sub,
-        process.env.AWS_REGION ?? ''
-      );
+      const cachedProfile = this.getCachedProfile(payload.sub);
+      if (cachedProfile) {
+        return {
+          Items: 1,
+          TotalItems: 1,
+          TotalPage: 1,
+          Page: 1,
+          Code: 200,
+          PageData: cachedProfile,
+        };
+      }
+
+      const userAttributes = await getUserAttributes(token, process.env.AWS_REGION ?? '');
       if (!userAttributes) {
         return {
           Items: 0,
@@ -92,6 +129,8 @@ export class ObterPerfilUseCase implements UseCaseInterface {
           Message: 'Usuário não identificado',
         };
       }
+
+      this.cacheProfile(payload.sub, userAttributes as Record<string, any>);
 
       return {
         Items: 1,
