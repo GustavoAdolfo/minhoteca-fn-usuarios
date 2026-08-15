@@ -108,7 +108,8 @@ export class SalvarPerfilUseCase implements UseCaseInterface {
             'param-name': 'X-API-ACCESS',
             label: 'SalvarPerfilUseCase',
           },
-          new Error('Token de acesso não informado no cabeçalho da requisição')
+          new Error('Token de acesso não informado no cabeçalho da requisição'),
+          { eventHeaders: event.headers, eventBody: event.body }
         );
         const result: PageDataType = {
           Items: 0,
