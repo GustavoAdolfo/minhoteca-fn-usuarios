@@ -16,6 +16,21 @@ resource "aws_iam_role_policy_attachment" "usuarioFunction_role_invoke" {
   policy_arn = aws_iam_policy.invoke_usuarioFunction.arn
 }
 
+##### S3
+
+resource "aws_iam_policy" "s3_usuarioFunction" {
+  name        = "minhoteca-lambda-usuarioFunction-s3"
+  path        = "/"
+  description = "IAM policy para lambda usuarioFunction s3"
+  policy      = data.aws_iam_policy_document.lambda_s3.json
+  tags        = merge(var.application_tags, { Contexto = "Usuario" })
+}
+
+resource "aws_iam_role_policy_attachment" "usuarioFunction_role_s3" {
+  role       = aws_iam_role.role_usuarioFunction.name
+  policy_arn = aws_iam_policy.s3_usuarioFunction.arn
+}
+
 ##### DynamoDB
 
 resource "aws_iam_policy" "dynamodb_usuarioFunction" {

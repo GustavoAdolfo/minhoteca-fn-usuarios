@@ -60,5 +60,7 @@ module "lambda" {
   ddb_usuario_emprestimos_range_name = module.database.ddb_usuario_emprestimos_range_name
   ddb_livro_emprestimos_hash_name    = module.database.ddb_livro_emprestimos_hash_name
   ddb_livro_emprestimos_range_name   = module.database.ddb_livro_emprestimos_range_name
+  s3_bucket_recursos                 = var.s3_bucket_recursos
+  s3_caminho_fotos_perfil            = var.s3_caminho_fotos_perfil
   debug                              = true
 }

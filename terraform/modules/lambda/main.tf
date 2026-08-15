@@ -33,6 +33,8 @@ resource "aws_lambda_function" "usuarioFunction" {
       CLIENT_ID_TOKEN                   = var.userpool_client_id
       DEBUG                             = var.debug
       ENVIRONMENT                       = var.environment
+      S3_BUCKET_RECURSOS                = var.s3_bucket_recursos
+      S3_CAMINHO_FOTOS_PERFIL           = var.s3_caminho_fotos_perfil
     }
   }
   tracing_config {
