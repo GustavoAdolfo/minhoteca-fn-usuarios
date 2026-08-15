@@ -79,6 +79,40 @@ describe('ObterPerfilUseCase', () => {
       });
     });
 
+    it('deve usar as claims do authorizer do Cognito quando a autenticação foi resolvida no gateway', async () => {
+      const useCase = new ObterPerfilUseCase();
+      const pageData = {
+        sub: 'sub-123',
+        email: 'usuario@exemplo.com',
+        name: 'Usuário de Teste',
+      };
+
+      mockGetUserAttributes.mockResolvedValue(pageData);
+
+      const result = await useCase.execute({
+        headers: {},
+        requestContext: {
+          requestId: 'request-id-1',
+          authorizer: {
+            claims: {
+              sub: 'sub-123',
+            },
+          },
+        },
+      } as unknown as APIGatewayProxyEvent);
+
+      expect(mockVerifyToken).not.toHaveBeenCalled();
+      expect(mockGetUserAttributes).toHaveBeenCalledWith('sub-123', 'us-east-1');
+      expect(result).toEqual({
+        Items: 1,
+        TotalItems: 1,
+        TotalPage: 1,
+        Page: 1,
+        Code: 200,
+        PageData: pageData,
+      });
+    });
+
     it('deve retornar 403 quando o token não for autorizado', async () => {
       const useCase = new ObterPerfilUseCase();
       mockExtractToken.mockReturnValue('access-token');
@@ -106,7 +140,7 @@ describe('ObterPerfilUseCase', () => {
 
       const result = await useCase.execute(createEvent({ 'X-API-ACCESS': 'Bearer access-token' }));
 
-      expect(mockGetUserAttributes).toHaveBeenCalledWith('access-token', 'us-east-1');
+      expect(mockGetUserAttributes).toHaveBeenCalledWith('sub-123', 'us-east-1');
       expect(result).toEqual({
         Items: 0,
         TotalItems: 0,
@@ -151,7 +185,7 @@ describe('ObterPerfilUseCase', () => {
 
       const result = await useCase.execute(createEvent({ 'x-api-access': 'Bearer access-token' }));
 
-      expect(mockGetUserAttributes).toHaveBeenCalledWith('access-token', 'us-east-1');
+      expect(mockGetUserAttributes).toHaveBeenCalledWith('sub-123', 'us-east-1');
       expect(result).toEqual({
         Items: 1,
         TotalItems: 1,

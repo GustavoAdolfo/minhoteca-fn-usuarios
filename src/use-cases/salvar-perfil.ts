@@ -99,30 +99,40 @@ export class SalvarPerfilUseCase implements UseCaseInterface {
     const logId = event.requestContext.requestId;
 
     try {
-      token = extractToken(event.headers);
-      if (!token) {
-        this.logger.error(
-          'Parâmetro identificador não informado',
-          {
-            logId,
-            'param-name': 'X-API-ACCESS',
-            label: 'SalvarPerfilUseCase',
-          },
-          new Error('Token de acesso não informado no cabeçalho da requisição'),
-          { eventHeaders: event.headers, eventBody: event.body }
-        );
-        const result: PageDataType = {
-          Items: 0,
-          TotalItems: 0,
-          TotalPage: 0,
-          Page: 0,
-          Code: 400,
-          Message: 'Parâmetro identificador não informado',
-        };
-        return result;
+      const authorizerClaims =
+        (event.requestContext as any)?.authorizer?.claims ??
+        (event.requestContext as any)?.authorizer?.jwt?.claims ??
+        null;
+
+      if (authorizerClaims?.sub) {
+        payload = { sub: authorizerClaims.sub };
+      } else {
+        token = extractToken(event.headers);
+        if (!token) {
+          this.logger.error(
+            'Parâmetro identificador não informado',
+            {
+              logId,
+              'param-name': 'X-API-ACCESS',
+              label: 'SalvarPerfilUseCase',
+            },
+            new Error('Token de acesso não informado no cabeçalho da requisição'),
+            { eventHeaders: event.headers, eventBody: event.body }
+          );
+          const result: PageDataType = {
+            Items: 0,
+            TotalItems: 0,
+            TotalPage: 0,
+            Page: 0,
+            Code: 400,
+            Message: 'Parâmetro identificador não informado',
+          };
+          return result;
+        }
+
+        payload = await verifyToken(token);
       }
 
-      payload = await verifyToken(token);
       if (!payload || !payload.sub) {
         const result: PageDataType = {
           Items: 0,
