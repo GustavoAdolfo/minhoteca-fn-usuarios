@@ -45,6 +45,12 @@ export class SalvarFotoPerfilUseCase implements UseCaseInterface {
     let token: string | undefined = undefined;
     const logId = event.requestContext.requestId;
 
+    this.logger.info(
+      'Iniciando execução do caso de uso SalvarFotoPerfilUseCase',
+      { logId },
+      { payload: event.body }
+    );
+
     try {
       token = extractToken(event.headers);
       if (!token) {
