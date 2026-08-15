@@ -89,24 +89,13 @@ data "aws_iam_policy_document" "lambda_cognito" {
 
 data "aws_iam_policy_document" "lambda_s3" {
   statement {
+    sid    = "AllowPresignedObjectAccessForUserProfilePhotos"
     effect = "Allow"
     actions = [
       "s3:GetObject",
-      "s3:PutObject",
-      "s3:DeleteObject",
-      "s3:ListBucket",
-      "s3:GetBucketLocation",
-      "s3:PutObjectAcl",
-      "s3:PutObjectTagging",
-      "s3:GetObjectTagging",
-      "s3:GetObjectAcl",
-      "s3:ListBucketMultipartUploads",
-      "s3:AbortMultipartUpload",
-      "s3:ListMultipartUploadParts",
-      "s3:CompleteMultipartUpload"
+      "s3:PutObject"
     ]
     resources = [
-      "arn:aws:s3:::${var.s3_bucket_recursos}",
       "arn:aws:s3:::${var.s3_bucket_recursos}/${var.s3_caminho_fotos_perfil}/*"
     ]
   }
