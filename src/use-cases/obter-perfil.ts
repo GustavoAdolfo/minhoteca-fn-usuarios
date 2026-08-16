@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { APIGatewayProxyEvent } from 'aws-lambda';
 import { LogService, UseCaseInterface, PageDataType } from '@gustavoadolfo/minhoteca-core-layer';
-import { adminGetUserAttributes, getUserAttributes } from '../cognito-proxy';
+import { adminGetUserAttributes } from '../cognito-proxy';
 import { extractToken, verifyToken } from '../commom';
 
 const PROFILE_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -128,7 +128,10 @@ export class ObterPerfilUseCase implements UseCaseInterface {
         };
       }
 
-      const userAttributes = await getUserAttributes(payload.sub, process.env.AWS_REGION ?? '');
+      const userAttributes = await adminGetUserAttributes(
+        payload.sub,
+        process.env.AWS_REGION ?? ''
+      );
       if (!userAttributes) {
         return {
           Items: 0,
