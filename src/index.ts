@@ -1,4 +1,4 @@
-import { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
+import { APIGatewayEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { UseCaseInterface, LogService, PageDataType } from '@gustavoadolfo/minhoteca-core-layer';
 import { registradores } from './registradores';
 
@@ -11,12 +11,24 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'GET,OPTIONS,POST,PUT,HEAD,PATCH,DELETE',
 };
 
-export const handler = async (
-  event: APIGatewayEvent,
-  context: Context
-): Promise<APIGatewayProxyResult> => {
+export const handler = async (event: APIGatewayEvent): Promise<APIGatewayProxyResult> => {
   const logId = event.requestContext.requestId;
-  logService.info('Evento recebido:', { logId }, { event, context });
+  logService.info(
+    'Evento recebido',
+    {
+      logId,
+      eventPath: event.path,
+      httpMethod: event.httpMethod,
+      headersCount: Object.keys(event.headers ?? {}).length,
+      bodyLength: event.body ? Buffer.byteLength(event.body, 'utf8') : 0,
+    },
+    {
+      requestContext: {
+        stage: event.requestContext?.stage,
+        sourceIp: event.requestContext?.identity?.sourceIp,
+      },
+    }
+  );
 
   const eventMethods = event.httpMethod.toLowerCase() as keyof typeof registradores;
   const registradoresDoMetodo = registradores[eventMethods];
@@ -47,9 +59,8 @@ export const handler = async (
           casoDeUsoName: casoDeUso.constructor.name,
         }
       );
-      const dadosEvento = JSON.parse(JSON.stringify(event));
       try {
-        const result: PageDataType = await casoDeUso.execute(dadosEvento, logId);
+        const result: PageDataType = await casoDeUso.execute(event, logId);
 
         if (result.Code && result.Code >= 400) {
           logService.warn(
