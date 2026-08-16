@@ -87,7 +87,7 @@ describe('ObterPerfilUseCase', () => {
         name: 'Usuário de Teste',
       };
 
-      mockGetUserAttributes.mockResolvedValue(pageData);
+      mockAdminGetUserAttributes.mockResolvedValue(pageData);
 
       const result = await useCase.execute({
         headers: {},
@@ -136,7 +136,7 @@ describe('ObterPerfilUseCase', () => {
       const useCase = new ObterPerfilUseCase();
       mockExtractToken.mockReturnValue('access-token');
       mockVerifyToken.mockResolvedValue({ sub: 'sub-123' });
-      mockGetUserAttributes.mockResolvedValue(null);
+      mockAdminGetUserAttributes.mockResolvedValue(null);
 
       const result = await useCase.execute(createEvent({ 'X-API-ACCESS': 'Bearer access-token' }));
 
