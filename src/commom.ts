@@ -9,7 +9,9 @@ export const reviewOptions = (options: ConfigServiceClient) => {
   const config: Record<string, unknown> = {
     requestHandler: new NodeHttpHandler({
       httpAgent: new Agent({
-        keepAlive: false,
+        keepAlive: true,
+        keepAliveMsecs: 30000,
+        timeout: 5000,
       }),
     }),
     region: options.config.region as string,

@@ -13,10 +13,13 @@ const corsHeaders = {
 
 export const handler = async (event: APIGatewayEvent): Promise<APIGatewayProxyResult> => {
   const logId = event.requestContext.requestId;
+  const startedAt = Date.now();
+
   logService.info(
     'Evento recebido',
     {
       logId,
+      startedAt,
       eventPath: event.path,
       httpMethod: event.httpMethod,
       headersCount: Object.keys(event.headers ?? {}).length,
@@ -61,6 +64,15 @@ export const handler = async (event: APIGatewayEvent): Promise<APIGatewayProxyRe
       );
       try {
         const result: PageDataType = await casoDeUso.execute(event, logId);
+        const totalMs = Date.now() - startedAt;
+
+        logService.info('fim handler', {
+          logId,
+          totalMs,
+          eventPath: event.path,
+          httpMethod: event.httpMethod,
+          casoDeUsoName: casoDeUso.constructor.name,
+        });
 
         if (result.Code && result.Code >= 400) {
           logService.warn(
