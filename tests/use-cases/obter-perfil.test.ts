@@ -87,7 +87,7 @@ describe('ObterPerfilUseCase', () => {
         name: 'Usuário de Teste',
       };
 
-      mockGetUserAttributes.mockResolvedValue(pageData);
+      mockAdminGetUserAttributes.mockResolvedValue(pageData);
 
       const result = await useCase.execute({
         headers: {},
@@ -102,7 +102,7 @@ describe('ObterPerfilUseCase', () => {
       } as unknown as APIGatewayProxyEvent);
 
       expect(mockVerifyToken).not.toHaveBeenCalled();
-      expect(mockGetUserAttributes).toHaveBeenCalledWith('sub-123', 'us-east-1');
+      expect(mockAdminGetUserAttributes).toHaveBeenCalledWith('sub-123', 'us-east-1');
       expect(result).toEqual({
         Items: 1,
         TotalItems: 1,
@@ -121,7 +121,7 @@ describe('ObterPerfilUseCase', () => {
       const result = await useCase.execute(createEvent({ 'X-API-ACCESS': 'Bearer access-token' }));
 
       expect(mockVerifyToken).toHaveBeenCalledWith('access-token');
-      expect(mockGetUserAttributes).not.toHaveBeenCalled();
+      expect(mockAdminGetUserAttributes).not.toHaveBeenCalled();
       expect(result).toEqual({
         Items: 0,
         TotalItems: 0,
@@ -136,11 +136,11 @@ describe('ObterPerfilUseCase', () => {
       const useCase = new ObterPerfilUseCase();
       mockExtractToken.mockReturnValue('access-token');
       mockVerifyToken.mockResolvedValue({ sub: 'sub-123' });
-      mockGetUserAttributes.mockResolvedValue(null);
+      mockAdminGetUserAttributes.mockResolvedValue(null);
 
       const result = await useCase.execute(createEvent({ 'X-API-ACCESS': 'Bearer access-token' }));
 
-      expect(mockGetUserAttributes).toHaveBeenCalledWith('sub-123', 'us-east-1');
+      expect(mockAdminGetUserAttributes).toHaveBeenCalledWith('sub-123', 'us-east-1');
       expect(result).toEqual({
         Items: 0,
         TotalItems: 0,
@@ -161,14 +161,14 @@ describe('ObterPerfilUseCase', () => {
 
       mockExtractToken.mockReturnValue('access-token');
       mockVerifyToken.mockResolvedValue({ sub: 'sub-123' });
-      mockGetUserAttributes.mockResolvedValue(pageData);
+      mockAdminGetUserAttributes.mockResolvedValue(pageData);
 
       const first = await useCase.execute(createEvent({ 'X-API-ACCESS': 'Bearer access-token' }));
       const second = await useCase.execute(createEvent({ 'X-API-ACCESS': 'Bearer access-token' }));
 
       expect(first.Code).toBe(200);
       expect(second.Code).toBe(200);
-      expect(mockGetUserAttributes).toHaveBeenCalledTimes(1);
+      expect(mockAdminGetUserAttributes).toHaveBeenCalledTimes(1);
     });
 
     it('deve retornar os atributos do usuário quando a consulta for bem-sucedida', async () => {
@@ -181,11 +181,11 @@ describe('ObterPerfilUseCase', () => {
 
       mockExtractToken.mockReturnValue('access-token');
       mockVerifyToken.mockResolvedValue({ sub: 'sub-123' });
-      mockGetUserAttributes.mockResolvedValue(pageData);
+      mockAdminGetUserAttributes.mockResolvedValue(pageData);
 
       const result = await useCase.execute(createEvent({ 'x-api-access': 'Bearer access-token' }));
 
-      expect(mockGetUserAttributes).toHaveBeenCalledWith('sub-123', 'us-east-1');
+      expect(mockAdminGetUserAttributes).toHaveBeenCalledWith('sub-123', 'us-east-1');
       expect(result).toEqual({
         Items: 1,
         TotalItems: 1,
