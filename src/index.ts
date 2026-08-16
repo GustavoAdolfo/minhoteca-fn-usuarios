@@ -1,4 +1,4 @@
-import { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
+import { APIGatewayEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { UseCaseInterface, LogService, PageDataType } from '@gustavoadolfo/minhoteca-core-layer';
 import { registradores } from './registradores';
 
