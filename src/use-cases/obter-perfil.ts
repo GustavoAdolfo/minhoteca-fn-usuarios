@@ -69,12 +69,21 @@ export class ObterPerfilUseCase implements UseCaseInterface {
     let payload: Record<string, any> | null = null;
     let token: string | undefined = undefined;
     const logId = event.requestContext.requestId;
+    const startedAt = Date.now();
 
     try {
       const authorizerClaims =
         (event.requestContext as any)?.authorizer?.claims ??
         (event.requestContext as any)?.authorizer?.jwt?.claims ??
         null;
+
+      const authorizerResolvedAt = Date.now();
+      this.logger.info('authorizer resolvido', {
+        logId,
+        authorizerMs: authorizerResolvedAt - startedAt,
+        hasSub: !!authorizerClaims?.sub,
+        label: 'ObterPerfilUseCase',
+      });
 
       if (authorizerClaims?.sub) {
         payload = { sub: authorizerClaims.sub };
@@ -117,6 +126,14 @@ export class ObterPerfilUseCase implements UseCaseInterface {
       }
 
       const cachedProfile = this.getCachedProfile(payload.sub);
+      const cacheCheckAt = Date.now();
+      this.logger.info('cache verificado', {
+        logId,
+        cacheCheckMs: cacheCheckAt - startedAt,
+        cacheHit: !!cachedProfile,
+        label: 'ObterPerfilUseCase',
+      });
+
       if (cachedProfile) {
         return {
           Items: 1,
@@ -128,10 +145,18 @@ export class ObterPerfilUseCase implements UseCaseInterface {
         };
       }
 
+      const beforeCognitoAt = Date.now();
       const userAttributes = await adminGetUserAttributes(
         payload.sub,
         process.env.AWS_REGION ?? ''
       );
+      const cognitoMs = Date.now() - beforeCognitoAt;
+      this.logger.info('cognito perfil consultado', {
+        logId,
+        cognitoMs,
+        totalMs: Date.now() - startedAt,
+        label: 'ObterPerfilUseCase',
+      });
       if (!userAttributes) {
         return {
           Items: 0,
