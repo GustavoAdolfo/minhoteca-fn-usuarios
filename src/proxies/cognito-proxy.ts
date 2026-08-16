@@ -15,9 +15,27 @@ import {
 import { ConfigServiceClient } from '@aws-sdk/client-config-service';
 import { optionsConfiguration, reviewOptions } from '../commom';
 
+const cognitoClientCache = new Map<string, CognitoIdentityProviderClient>();
+
 const createCognitoClient = (options: ConfigServiceClient): CognitoIdentityProviderClient => {
   const config = reviewOptions(options);
   return new CognitoIdentityProviderClient(config);
+};
+
+const getSharedCognitoClient = (
+  region: string,
+  endpoint?: string
+): CognitoIdentityProviderClient => {
+  const cacheKey = `${region}:${endpoint ?? 'default'}`;
+  const cachedClient = cognitoClientCache.get(cacheKey);
+  if (cachedClient) {
+    return cachedClient;
+  }
+
+  const config = optionsConfiguration(region, endpoint);
+  const client = createCognitoClient(config);
+  cognitoClientCache.set(cacheKey, client);
+  return client;
 };
 
 export const getUserAttributes = async (
@@ -29,8 +47,7 @@ export const getUserAttributes = async (
     AccessToken: token,
   };
 
-  const config = optionsConfiguration(region, endpoint);
-  const client = createCognitoClient(config);
+  const client = getSharedCognitoClient(region, endpoint);
   const command = new GetUserCommand(input);
   const response = await client.send(command);
   return response;
@@ -40,8 +57,7 @@ export const adminGetUserAttributes = async (
   sub: string,
   region: string
 ): Promise<AdminGetUserCommandOutput> => {
-  const config = optionsConfiguration(region); //, endpoint);
-  const client = createCognitoClient(config);
+  const client = getSharedCognitoClient(region);
   const input = {
     // AdminGetUserRequest
     UserPoolId: process.env.USER_POOL_ID ?? '',
@@ -58,8 +74,7 @@ export const adminUpdateUserAttributes = async (
   attributes: AttributeType[],
   endpoint?: string
 ): Promise<AdminUpdateUserAttributesCommandOutput> => {
-  const config = optionsConfiguration(region, endpoint);
-  const client = createCognitoClient(config);
+  const client = getSharedCognitoClient(region, endpoint);
   const input: AdminUpdateUserAttributesCommandInput = {
     UserPoolId: process.env.USER_POOL_ID, // required
     Username: sub, // required
@@ -71,8 +86,7 @@ export const adminUpdateUserAttributes = async (
 };
 
 export const listUsers = async (region: string, endpoint?: string): Promise<UserType[] | null> => {
-  const config = optionsConfiguration(region, endpoint);
-  const client = createCognitoClient(config);
+  const client = getSharedCognitoClient(region, endpoint);
   const input = {
     // ListUsersRequest
     UserPoolId: process.env.USER_POOL_ID, // required
