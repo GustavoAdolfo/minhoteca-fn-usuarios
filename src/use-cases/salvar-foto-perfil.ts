@@ -29,7 +29,7 @@ export class SalvarFotoPerfilUseCase implements UseCaseInterface {
 
     addAttribute('contentType', payload.contentType);
     addAttribute('fileType', payload.fileType);
-    addAttribute('preSignMethod', payload.preSignMethod);
+    addAttribute('preSignMethod', payload.preSignMethod ?? payload.method);
 
     return attributes.reduce(
       (acc, attr) => {
@@ -166,10 +166,11 @@ export class SalvarFotoPerfilUseCase implements UseCaseInterface {
       const contentType = attributes.contentType ?? '';
       const extension = attributes.fileType ?? '';
       const objectName = `${picturePath}/${tokenPayload?.sub}.${extension}`;
+      const preSignMethod = (attributes.preSignMethod ?? 'PUT').toUpperCase();
 
       let urlFotoPerfil: string | null = null;
 
-      if (attributes.preSignMethod.toUpperCase() === 'PUT') {
+      if (preSignMethod === 'PUT') {
         urlFotoPerfil = await this.s3Repository.createPreSignedUrlPut(
           bucketName,
           objectName,

@@ -254,6 +254,40 @@ describe('SalvarFotoPerfilUseCase', () => {
     });
   });
 
+  it('deve usar PUT quando o método de pré-assinatura não for informado', async () => {
+    const useCase = new SalvarFotoPerfilUseCase();
+    mockExtractToken.mockReturnValue('access-token');
+    mockVerifyToken.mockResolvedValue({ sub: 'sub-123' });
+
+    const result = await useCase.execute(
+      createEvent(JSON.stringify({ contentType: 'image/jpeg', fileType: 'jpg' }), {
+        'X-API-ACCESS': 'Bearer access-token',
+      })
+    );
+
+    expect(mockCreatePreSignedUrlPut).toHaveBeenCalledWith(
+      'bucket-teste',
+      'fotos-perfil/sub-123.jpg',
+      'image/jpeg'
+    );
+    expect(result.Code).toBe(200);
+  });
+
+  it('deve aceitar method como alias de preSignMethod', async () => {
+    const useCase = new SalvarFotoPerfilUseCase();
+    mockExtractToken.mockReturnValue('access-token');
+    mockVerifyToken.mockResolvedValue({ sub: 'sub-123' });
+
+    const result = await useCase.execute(
+      createEvent(JSON.stringify({ contentType: 'image/jpeg', fileType: 'jpg', method: 'PUT' }), {
+        'X-API-ACCESS': 'Bearer access-token',
+      })
+    );
+
+    expect(mockCreatePreSignedUrlPut).toHaveBeenCalled();
+    expect(result.Code).toBe(200);
+  });
+
   it('deve gerar a URL de leitura para método GET', async () => {
     const useCase = new SalvarFotoPerfilUseCase();
     mockExtractToken.mockReturnValue('access-token');
