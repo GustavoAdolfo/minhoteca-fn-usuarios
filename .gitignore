@@ -145,3 +145,6 @@ vite.config.ts.timestamp-*
 **/.terraform
 **/.terraform.lock.hcl
 .npmrc
+terraform/envs/local/
+terraform.tfstate
+terraform/modules/lambda/usuariosFunction.zip
