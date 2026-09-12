@@ -204,24 +204,34 @@ describe('SalvarFotoPerfilUseCase', () => {
     });
   });
 
-  it('deve retornar 400 quando o fileType não for informado', async () => {
+  it('deve inferir o fileType a partir do contentType quando o fileType não for informado', async () => {
     const useCase = new SalvarFotoPerfilUseCase();
     mockExtractToken.mockReturnValue('access-token');
     mockVerifyToken.mockResolvedValue({ sub: 'sub-123' });
 
     const result = await useCase.execute(
-      createEvent(JSON.stringify({ contentType: 'image/jpeg', preSignMethod: 'PUT' }), {
-        'X-API-ACCESS': 'Bearer access-token',
-      })
+      createEvent(
+        JSON.stringify({ contentType: 'image/jpeg', preSignMethod: 'get', method: 'get' }),
+        {
+          'X-API-ACCESS': 'Bearer access-token',
+        }
+      )
     );
 
+    expect(mockCreatePreSignedUrlGet).toHaveBeenCalledWith(
+      'bucket-teste',
+      'fotos-perfil/sub-123.jpeg',
+      'image/jpeg'
+    );
     expect(result).toEqual({
-      Items: 0,
-      TotalItems: 0,
-      TotalPage: 0,
-      Page: 0,
-      Code: 400,
-      Message: 'Tipo de arquivo da foto de perfil não informado no body da requisição',
+      Items: 1,
+      TotalItems: 1,
+      TotalPage: 1,
+      Page: 1,
+      Code: 200,
+      PageData: {
+        urlFotoPerfil: 'https://download.example.com/foto.jpg',
+      },
     });
   });
 

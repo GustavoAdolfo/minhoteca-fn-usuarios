@@ -27,8 +27,19 @@ export class SalvarFotoPerfilUseCase implements UseCaseInterface {
       attributes.push({ Name: name, Value: normalizedValue });
     };
 
+    let fileType = payload.fileType ?? payload.extension ?? payload.fileExtension;
+    if (!fileType && payload.contentType && typeof payload.contentType === 'string') {
+      const contentTypeTrimmed = payload.contentType.trim();
+      if (contentTypeTrimmed.includes('/')) {
+        const parts = contentTypeTrimmed.split('/');
+        if (parts[1]) {
+          fileType = parts[1].split('+')[0].trim();
+        }
+      }
+    }
+
     addAttribute('contentType', payload.contentType);
-    addAttribute('fileType', payload.fileType);
+    addAttribute('fileType', fileType);
     addAttribute('preSignMethod', payload.preSignMethod ?? payload.method);
 
     return attributes.reduce(
