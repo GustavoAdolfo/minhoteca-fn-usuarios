@@ -49,6 +49,7 @@ module "lambda" {
   application_tags                   = data.aws_servicecatalogappregistry_application.minhoteca_application.application_tag
   adapterLayer_arn                   = local.adapterLayer_arn
   coreLayer_arn                      = local.coreLayer_arn
+  casosDeUsoLayer_arn                = local.casosDeUsoLayer_arn
   environment                        = var.environment
   userpool_arn                       = data.aws_cognito_user_pool.minhoteca_user_pool.arn
   userpool_id                        = data.aws_cognito_user_pool.minhoteca_user_pool.id
