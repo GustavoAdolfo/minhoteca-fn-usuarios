@@ -50,7 +50,7 @@
     "@smithy/types": "^4.16.1",
     "@types/aws-lambda": "^8.10.162",
     "@types/jest": "^30.0.0",
-    "@types/node": "^26.1.2",
+    "@types/node": "^26.5.1",
     "@typescript-eslint/eslint-plugin": "^8.65.0",
     "@typescript-eslint/parser": "^8.65.0",
     "commitlint": "^21.2.1",
