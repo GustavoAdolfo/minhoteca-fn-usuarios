@@ -13,7 +13,8 @@ resource "aws_lambda_function" "usuarioFunction" {
   source_code_hash               = data.archive_file.usuarioFunction_file.output_base64sha256
   layers = [
     var.coreLayer_arn,
-    var.adapterLayer_arn
+    var.adapterLayer_arn,
+    var.casosDeUsoLayer_arn
   ]
   dead_letter_config {
     target_arn = aws_sqs_queue.usuarioFunctionDL.arn
@@ -22,10 +23,10 @@ resource "aws_lambda_function" "usuarioFunction" {
     variables = {
       VERSION                           = data.external.usuarioFunction_version.result.version
       DYNAMODB_REPOSITORY               = tostring(var.dynamodb_repository)
-      TB_USUARIO_EMPRESTIMOS_NAME       = var.ddb_usuario_emprestimos_name
+      TABELA_EMPRESTIMO_USUARIO         = var.ddb_usuario_emprestimos_name
       TB_USUARIO_EMPRESTIMOS_HASH_NAME  = var.ddb_usuario_emprestimos_hash_name
       TB_USUARIO_EMPRESTIMOS_RANGE_NAME = var.ddb_usuario_emprestimos_range_name
-      TB_LIVRO_EMPRESTIMOS_NAME         = var.ddb_livro_emprestimos_name
+      TABELA_EMPRESTIMO_LIVROS          = var.ddb_livro_emprestimos_name
       TB_LIVRO_EMPRESTIMOS_HASH_NAME    = var.ddb_livro_emprestimos_hash_name
       TB_LIVRO_EMPRESTIMOS_RANGE_NAME   = var.ddb_livro_emprestimos_range_name
       USER_POOL_ARN                     = var.userpool_arn
@@ -63,7 +64,27 @@ resource "null_resource" "usuarioFunction_build" {
     ]))
   }
   provisioner "local-exec" {
-    command = "cd ${path.module}/../../.. && rm -rf lambda-package && npm ci --ignore-scripts && mkdir -p lambda-package && npx esbuild src/index.ts --bundle --platform=node --target=node22 --format=cjs --outfile=lambda-package/index.js ${var.lambda_bundle_minify ? "--minify" : ""} ${var.lambda_bundle_sourcemap ? "--sourcemap" : ""} --external:@gustavoadolfo/minhoteca-core-layer --external:@gustavoadolfo/minhoteca-adapter-layer"
+    command = <<EOT
+      cd ${path.module}/../../.. && \
+      rm -rf lambda-package && \
+      npm ci --ignore-scripts && \
+      if [ "${var.environment}" = "local" ]; then \
+        npm install @gustavoadolfo/minhoteca-core-layer @gustavoadolfo/minhoteca-adapter-layer @gustavoadolfo/minhoteca-casos-de-uso-layer; \
+      fi && \
+      mkdir -p lambda-package && \
+      npx esbuild src/index.ts --bundle --platform=node --target=node22 --format=cjs --outfile=lambda-package/index.js ${var.lambda_bundle_minify ? "--minify" : ""} ${var.lambda_bundle_sourcemap ? "--sourcemap" : ""} --external:@gustavoadolfo/minhoteca-core-layer --external:@gustavoadolfo/minhoteca-adapter-layer --external:@gustavoadolfo/minhoteca-casos-de-uso-layer && \
+      if [ "${var.environment}" = "local" ]; then \
+        rm -rf .layer_deps lambda-package/node_modules && \
+        mkdir -p .layer_deps && \
+        if [ -f .npmrc ]; then cp .npmrc .layer_deps/; fi && \
+        cd .layer_deps && \
+        echo '{"name":"layer-deps","version":"1.0.0","private":true}' > package.json && \
+        npm install --omit=dev @gustavoadolfo/minhoteca-core-layer @gustavoadolfo/minhoteca-adapter-layer @gustavoadolfo/minhoteca-casos-de-uso-layer && \
+        cd .. && \
+        cp -r .layer_deps/node_modules lambda-package/node_modules && \
+        rm -rf .layer_deps; \
+      fi
+    EOT
   }
 }
 
