@@ -1,6 +1,6 @@
 {
   "name": "minhoteca-fn-usuarios",
-  "version": "1.0.36",
+  "version": "1.0.37",
   "description": "Função de gerenciamento de usuários da Minhoteca",
   "main": "index.js",
   "scripts": {
@@ -58,7 +58,7 @@
     "esbuild": "^0.28.1",
     "eslint": "^10.8.0",
     "husky": "^9.1.7",
-    "jest": "^30.4.2",
+    "jest": "^30.5.1",
     "lint-staged": "^17.3.0",
     "prettier": "^3.9.6",
     "ts-jest": "^29.4.12",
