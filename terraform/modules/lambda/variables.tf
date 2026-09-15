@@ -36,6 +36,10 @@ variable "adapterLayer_arn" {
   type = string
 }
 
+variable "casosDeUsoLayer_arn" {
+  type = string
+}
+
 variable "dynamodb_repository" {
   type    = bool
   default = false

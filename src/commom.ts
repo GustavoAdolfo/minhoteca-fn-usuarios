@@ -43,15 +43,28 @@ export const optionsConfiguration = (
 };
 
 export function extractToken(headers: APIGatewayProxyEventHeaders): string | undefined {
-  let token = headers?.['X-API-ACCESS'] ?? headers?.['x-api-access'];
-  if (!token) {
+  const raw = headers?.['x-api-access'] ?? headers?.['X-API-ACCESS'] ?? headers?.['X-Api-Access'];
+
+  if (!raw) {
     return undefined;
   }
-  token = token.startsWith('Bearer') ? token.replace('Bearer', '').trim() : token.trim();
-  return token;
+
+  return raw.replace(/^Bearer\s+/i, '').trim();
 }
 
 export async function verifyToken(token: string): Promise<Record<string, any> | null> {
+  if (
+    (process.env.ENVIRONMENT ?? '').toLowerCase() === 'local' ||
+    process.env.USE_FAKE_AUTH === 'true'
+  ) {
+    return {
+      sub: 'local-user-1',
+      username: 'local.user',
+      email: 'local@minhoteca.test',
+      'cognito:username': 'local.user',
+    };
+  }
+
   const userPoolId = process.env.USER_POOL_ID ?? '';
   const tokenUse = 'access';
   const clientId = process.env.CLIENT_ID_TOKEN ?? '';

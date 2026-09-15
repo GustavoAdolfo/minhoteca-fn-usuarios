@@ -59,7 +59,9 @@ export const handler = async (event: APIGatewayEvent): Promise<APIGatewayProxyRe
           keyPath: chaveSelecionada,
           eventPath: event.path,
           httpMethod: event.httpMethod,
-          casoDeUsoName: casoDeUso.constructor.name,
+          casoDeUsoName:
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (casoDeUso as any)?.constructor?.name ?? (casoDeUso as any)?.nome ?? 'UnknownUseCase',
         }
       );
       try {
@@ -71,7 +73,9 @@ export const handler = async (event: APIGatewayEvent): Promise<APIGatewayProxyRe
           totalMs,
           eventPath: event.path,
           httpMethod: event.httpMethod,
-          casoDeUsoName: casoDeUso.constructor.name,
+          casoDeUsoName:
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (casoDeUso as any)?.constructor?.name ?? (casoDeUso as any)?.nome ?? 'UnknownUseCase',
         });
 
         if (result.Code && result.Code >= 400) {

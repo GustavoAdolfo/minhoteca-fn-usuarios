@@ -7,6 +7,7 @@ import { extractToken, verifyToken } from '../commom';
 const PROFILE_CACHE_TTL_MS = 5 * 60 * 1000;
 
 export class ObterPerfilUseCase implements UseCaseInterface {
+  static readonly name = 'ObterPerfilUseCase';
   private logger: LogService;
   private readonly profileCache = new Map<
     string,
@@ -146,26 +147,38 @@ export class ObterPerfilUseCase implements UseCaseInterface {
       }
 
       const beforeCognitoAt = Date.now();
-      const userAttributes = await adminGetUserAttributes(
-        payload.sub,
-        process.env.AWS_REGION ?? ''
-      );
-      const cognitoMs = Date.now() - beforeCognitoAt;
-      this.logger.info('cognito perfil consultado', {
-        logId,
-        cognitoMs,
-        totalMs: Date.now() - startedAt,
-        label: 'ObterPerfilUseCase',
-      });
-      if (!userAttributes) {
-        return {
-          Items: 0,
-          TotalItems: 0,
-          TotalPage: 0,
-          Page: 0,
-          Code: 404,
-          Message: 'Usuário não identificado',
+
+      let userAttributes;
+
+      if (
+        (process.env.ENVIRONMENT ?? '').toLowerCase() === 'local' ||
+        process.env.USE_FAKE_AUTH === 'true'
+      ) {
+        userAttributes = {
+          sub: payload.sub,
+          username: 'local.user',
+          email: 'local@minhoteca.test',
+          'cognito:username': 'local.user',
         };
+      } else {
+        userAttributes = await adminGetUserAttributes(payload.sub, process.env.AWS_REGION ?? '');
+        const cognitoMs = Date.now() - beforeCognitoAt;
+        this.logger.info('cognito perfil consultado', {
+          logId,
+          cognitoMs,
+          totalMs: Date.now() - startedAt,
+          label: 'ObterPerfilUseCase',
+        });
+        if (!userAttributes) {
+          return {
+            Items: 0,
+            TotalItems: 0,
+            TotalPage: 0,
+            Page: 0,
+            Code: 404,
+            Message: 'Usuário não identificado',
+          };
+        }
       }
 
       this.cacheProfile(payload.sub, userAttributes as Record<string, any>);
