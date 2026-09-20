@@ -128,3 +128,8 @@ variable "s3_bucket_recursos" {
 variable "s3_caminho_fotos_perfil" {
   type = string
 }
+
+variable "tabela_livros" {
+  type    = string
+  default = "Livros"
+}

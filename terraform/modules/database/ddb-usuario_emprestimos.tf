@@ -13,7 +13,7 @@ resource "aws_dynamodb_table" "ddb_usuario_emprestimos" {
     name = var.usuario_emprestimos_range_key
     type = var.usuario_emprestimos_range_type
   }
-  tags = merge(var.application_tags, { Contexto = "Emprestimos" })
+  tags = merge(var.application_tags, { Contexto = "Empréstimos" })
 }
 
 output "ddb_usuario_emprestimos_arn" {
