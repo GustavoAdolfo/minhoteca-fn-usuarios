@@ -166,6 +166,11 @@ jobs:
           TF_VAR_userpool_client_id: ${{ vars.TF_userpool_client_id }}
           TF_VAR_s3_bucket_recursos: ${{ vars.TF_s3_bucket_recursos }}
           TF_VAR_s3_caminho_fotos_perfil: ${{ vars.TF_s3_caminho_fotos_perfil }}
+          TF_VAR_mongodb_username: ${{ vars.TF_mongodb_username }}
+          TF_VAR_mongodb_password: ${{ vars.TF_mongodb_password }}
+          TF_VAR_mongodb_database: ${{ vars.TF_mongodb_database }}
+          TF_VAR_mongodb_cluster: ${{ vars.TF_mongodb_cluster }}
+          TF_VAR_mongodb_appname: ${{ vars.TF_mongodb_appname }}
         run: terraform plan -out=tfplan -input=false
 
       - name: Terraform Apply
@@ -176,5 +181,10 @@ jobs:
           TF_VAR_userpool_client_id: ${{ vars.TF_userpool_client_id }}
           TF_VAR_s3_bucket_recursos: ${{ vars.TF_s3_bucket_recursos }}
           TF_VAR_s3_caminho_fotos_perfil: ${{ vars.TF_s3_caminho_fotos_perfil }}
+          TF_VAR_mongodb_username: ${{ vars.TF_mongodb_username }}
+          TF_VAR_mongodb_password: ${{ vars.TF_mongodb_password }}
+          TF_VAR_mongodb_database: ${{ vars.TF_mongodb_database }}
+          TF_VAR_mongodb_cluster: ${{ vars.TF_mongodb_cluster }}
+          TF_VAR_mongodb_appname: ${{ vars.TF_mongodb_appname }}
         # O auto-approve é essencial em ambientes de CI/CD pois não há interação humana
         run: terraform apply -auto-approve -input=false tfplan

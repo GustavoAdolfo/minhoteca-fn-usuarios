@@ -25,3 +25,21 @@ variable "s3_bucket_recursos" {
 variable "s3_caminho_fotos_perfil" {
   type = string
 }
+
+variable "mongodb_username" {
+  type      = string
+  sensitive = true
+}
+variable "mongodb_password" {
+  type      = string
+  sensitive = true
+}
+variable "mongodb_database" {
+  type = string
+}
+variable "mongodb_cluster" {
+  type = string
+}
+variable "mongodb_appname" {
+  type = string
+}
