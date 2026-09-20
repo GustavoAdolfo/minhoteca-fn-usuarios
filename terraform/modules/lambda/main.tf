@@ -37,6 +37,11 @@ resource "aws_lambda_function" "usuarioFunction" {
       ENVIRONMENT                       = var.environment
       S3_BUCKET_RECURSOS                = var.s3_bucket_recursos
       S3_CAMINHO_FOTOS_PERFIL           = var.s3_caminho_fotos_perfil
+      MONGODB_USERNAME                  = var.mongodb_username
+      MONGODB_PASSWORD                  = var.mongodb_password
+      MONGODB_DATABASE                  = var.mongodb_database
+      MONGODB_CLUSTER                   = var.mongodb_cluster
+      MONGODB_APPNAME                   = var.mongodb_appname
     }
   }
   tracing_config {

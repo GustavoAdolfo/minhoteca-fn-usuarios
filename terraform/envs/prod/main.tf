@@ -64,4 +64,9 @@ module "lambda" {
   s3_bucket_recursos                 = var.s3_bucket_recursos
   s3_caminho_fotos_perfil            = var.s3_caminho_fotos_perfil
   debug                              = true
+  mongodb_username                   = var.mongodb_username
+  mongodb_password                   = var.mongodb_password
+  mongodb_database                   = var.mongodb_database
+  mongodb_cluster                    = var.mongodb_cluster
+  mongodb_appname                    = var.mongodb_appname
 }

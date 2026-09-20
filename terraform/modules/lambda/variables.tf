@@ -133,3 +133,31 @@ variable "tabela_livros" {
   type    = string
   default = "Livros"
 }
+
+
+variable "mongodb_username" {
+  type      = string
+  default   = ""
+  sensitive = true
+}
+
+variable "mongodb_password" {
+  type      = string
+  default   = ""
+  sensitive = true
+}
+
+variable "mongodb_database" {
+  type    = string
+  default = ""
+}
+
+variable "mongodb_cluster" {
+  type    = string
+  default = ""
+}
+
+variable "mongodb_appname" {
+  type    = string
+  default = "minhoteca-admin"
+}
